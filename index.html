@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивное КП: рентген бизнеса</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bgdark: '#101c32',
+                        bgdarker: '#0a1120',
+                        btnblue: '#1d64d8',
+                        panelbg: '#1e293b',
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a1120;
+            color: #e2e8f0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* защита цвета текста на кнопках для tilda и ios */
+        .btn-custom, .t-btn, .t-btn td, .t-submit {
+            background-color: #1d64d8 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            transition: all 0.2s ease;
+        }
+        .btn-custom:hover {
+            background-color: #154fa8 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(29, 100, 216, 0.4);
+        }
+
+        /* ползунок калькулятора */
+        input[type=range].calc-range {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range].calc-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #1d64d8;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 8px rgba(29, 100, 216, 0.5);
+        }
+        input[type=range].calc-range::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        /* радиокнопки */
+        .custom-radio:checked + div {
+            border-color: #1d64d8;
+            background-color: rgba(29, 100, 216, 0.15);
+            color: #60a5fa;
+        }
+
+        /* карточки рентгена и окупаемости */
+        .dark-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .dark-card:hover {
+            transform: translateY(-4px);
+            border-color: #1d64d8;
+            background: #101c32;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+        }
+        .xray-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .dark-card:hover .xray-content {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.3s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* безопасный паттерн для фона без поломки html */
+        .bg-dots {
+            background-color: #0f172a;
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    <!-- блок 1: крючок и боль -->
+    <header class="bg-gradient-to-br from-bgdark to-bgdarker pt-20 pb-24 px-4 border-b border-slate-800">
+        <div class="max-w-5xl mx-auto text-center">
+            <h1 class="font-serif text-white text-4xl md:text-5xl lg:text-6xl mb-6">Рентген вашего бизнеса</h1>
+            <p class="text-gray-300 text-lg md:text-xl mb-12 max-w-3xl mx-auto font-light">Ваш бизнес может приносить на 20-30% больше чистой прибыли прямо сейчас без увеличения продаж и найма новых людей.</p>
+
+            <!-- исправленный слайдер до/после -->
+        <div class="relative w-full h-[360px] md:h-[300px] rounded-xl overflow-hidden shadow-2xl bg-slate-900 border border-slate-700">
+            
+            <!-- панель "до" (нижний слой) -->
+            <div class="absolute inset-0 bg-dots">
+                <!-- обертка: динамически меняет ширину и скрывает обрезки -->
+                <div id="wrapper-before" class="absolute inset-y-0 left-0 flex items-center justify-center overflow-hidden p-2 md:p-8" style="width: 50%;">
+                    <div class="w-[145px] md:w-[320px] shrink-0 text-center">
+                        <div class="text-red-400 font-bold text-base md:text-3xl mb-2 md:mb-3 uppercase tracking-wider">интуиция и хаос</div>
+                        <div class="text-gray-400 text-[11px] md:text-sm leading-relaxed">кассовые разрывы, деньги заморожены в запасах, управленческая отчетность собирается по 20 дней, решения принимаются вслепую.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- панель "после" (верхний слой с клип-маской) -->
+            <div id="panel-after" class="absolute inset-0 bg-gradient-to-br from-bgdark to-btnblue" style="clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
+                <!-- обертка: динамически следует за ползунком -->
+                <div id="wrapper-after" class="absolute inset-y-0 flex items-center justify-center overflow-hidden p-2 md:p-8" style="left: 50%; width: 50%;">
+                    <div class="w-[145px] md:w-[320px] shrink-0 text-center">
+                        <div class="text-white font-bold text-base md:text-3xl mb-2 md:mb-3 uppercase tracking-wider">цифры и контроль</div>
+                        <div class="text-blue-100 text-[11px] md:text-sm leading-relaxed">точный платежный календарь, срок сборки отчетов 3-5 дней, оцифровка затрат и прозрачная картина чистой прибыли.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- невидимый ползунок управления -->
+            <input type="range" min="0" max="100" value="50" class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20 m-0" id="compare-range" aria-label="ползунок сравнения">
+
+                <!-- визуальная линия разделителя -->
+                <div class="absolute top-0 bottom-0 w-[2px] bg-white z-10 pointer-events-none" id="slider-line" style="left: 50%; transform: translateX(-50%);">
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(29,100,216,0.6)]">
+                        <svg class="w-6 h-6 text-btnblue ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-gray-500 text-sm mt-6 font-light">потяните ползунок, чтобы увидеть разницу в подходах</p>
+        </div>
+    </header>
+
+    <!-- блок 2: самодиагностика (калькулятор потерь) -->
+    <section class="bg-gradient-to-b from-bgdark to-bgdarker py-20 px-4 border-b border-slate-800">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl text-center mb-4">Самодиагностика потерь</h2>
+            <p class="text-gray-400 text-center mb-12 font-light">Ответьте на 3 вопроса, чтобы узнать примерную стоимость финансовых слепых зон в вашей компании.</p>
+
+            <div class="bg-panelbg border border-slate-700 rounded-xl p-6 md:p-10 shadow-2xl">
+                
+                <!-- вопрос 1 -->
+                <div class="mb-10">
+                    <label class="block text-gray-300 font-semibold mb-4">1. ваш среднемесячный оборот: <span id="turnover-display" class="text-blue-400 font-bold text-xl ml-2">15 млн руб</span></label>
+                    <input type="range" id="turnover-input" min="5" max="100" value="15" step="1" class="calc-range">
+                </div>
+
+                <!-- вопрос 2 -->
+                <div class="mb-10">
+                    <label class="block text-gray-300 font-semibold mb-4">2. случаются ли у вас кассовые разрывы?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="gaps" value="0.05" class="custom-radio peer sr-only" checked>
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                да, регулярно
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="gaps" value="0.02" class="custom-radio peer sr-only">
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                редко, но бывают
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="gaps" value="0" class="custom-radio peer sr-only">
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                никогда, есть резерв
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- вопрос 3 -->
+                <div class="mb-10">
+                    <label class="block text-gray-300 font-semibold mb-4">3. вы точно знаете свою рентабельность по чистой прибыли?</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="margin" value="0.06" class="custom-radio peer sr-only" checked>
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                нет, считаем примерно
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="margin" value="0.03" class="custom-radio peer sr-only">
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                да, но данные запаздывают
+                            </div>
+                        </label>
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="margin" value="0" class="custom-radio peer sr-only">
+                            <div class="p-4 rounded-lg border border-slate-600 text-center text-gray-400 transition-all">
+                                знаю с точностью до рубля
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- результат -->
+                <div class="mt-8 p-8 bg-[#101c32] rounded-xl border border-btnblue shadow-[0_0_20px_rgba(29,100,216,0.15)] text-center relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-btnblue opacity-10 rounded-full blur-2xl"></div>
+                    <p class="text-gray-300 mb-2 relative z-10">по моей практике, при таких вводных вы недополучаете около:</p>
+                    <div id="calc-result" class="text-4xl md:text-5xl font-bold text-blue-400 relative z-10 my-4">1 650 000 ₽</div>
+                    <p class="text-xs text-gray-500 relative z-10">* это гипотеза на основе аудита 10+ компаний. точную сумму я назову после внедрения управленческого учета.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- блок 3: рентген бизнеса -->
+    <section class="py-20 px-4 bg-bgdarker border-b border-slate-800">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl text-center mb-4">Рентген вашего бизнеса</h2>
+            <p class="text-gray-400 text-center mb-16 font-light">Наведите курсор на блок, чтобы увидеть неочевидные точки роста прибыли.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- карточка 1 -->
+                <div class="dark-card p-8 rounded-xl cursor-crosshair relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-600 group-hover:bg-btnblue transition-colors"></div>
+                    <div class="mb-6 border-b border-slate-700 pb-4">
+                        <svg class="w-8 h-8 text-blue-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-2">склад и закупки</h3>
+                        <p class="text-gray-500 text-sm">обычный взгляд: запасы нужны для бесперебойной работы.</p>
+                    </div>
+                    <div class="xray-content">
+                        <div class="text-blue-400 font-semibold mb-3 text-sm">моя работа:</div>
+                        <ul class="text-sm text-gray-300 space-y-2">
+                            <li>оцифровка затрат и выявление замороженных активов.</li>
+                            <li>освобождение оборотного капитала без кредитов.</li>
+                            <li>внедрение жестких лимитов на закупки.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- карточка 2 -->
+                <div class="dark-card p-8 rounded-xl cursor-crosshair relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-600 group-hover:bg-btnblue transition-colors"></div>
+                    <div class="mb-6 border-b border-slate-700 pb-4">
+                        <svg class="w-8 h-8 text-blue-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-2">продажи и услуги</h3>
+                        <p class="text-gray-500 text-sm">обычный взгляд: фокус бизнеса направлен только на рост выручки.</p>
+                    </div>
+                    <div class="xray-content">
+                        <div class="text-blue-400 font-semibold mb-3 text-sm">моя работа:</div>
+                        <ul class="text-sm text-gray-300 space-y-2">
+                            <li>расчет себестоимости и маржинальности по каждому продукту.</li>
+                            <li>отсечение убыточных направлений и клиентов.</li>
+                            <li>рост цен на продукцию на основе математики, а не интуиции.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- карточка 3 -->
+                <div class="dark-card p-8 rounded-xl cursor-crosshair relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-slate-600 group-hover:bg-btnblue transition-colors"></div>
+                    <div class="mb-6 border-b border-slate-700 pb-4">
+                        <svg class="w-8 h-8 text-blue-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-2">расходы и налоги</h3>
+                        <p class="text-gray-500 text-sm">обычный взгляд: обязательства, которые нужно просто вовремя оплатить.</p>
+                    </div>
+                    <div class="xray-content">
+                        <div class="text-blue-400 font-semibold mb-3 text-sm">моя работа:</div>
+                        <ul class="text-sm text-gray-300 space-y-2">
+                            <li>снижение неконтролируемых расходов в 5-10 раз.</li>
+                            <li>ликвидация кассовых разрывов через внедрение платежного календаря.</li>
+                            <li>законная оптимизация через внедрение бюджетов.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- блок 4: окупаемость (интерактивный расчет) -->
+    <section class="bg-gradient-to-b from-bgdarker to-bgdark py-20 px-4 border-b border-slate-800">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl text-center mb-6">Окупаемость внедрения</h2>
+            <p class="text-gray-400 text-center mb-16 max-w-2xl mx-auto font-light">Финансовый директор на аутсорсе не является статьей расходов. Это актив, стоимость которого возвращается компании в первые месяцы работы за счет найденных скрытых резервов.</p>
+
+            <!-- шаг 1: расчет новой прибыли -->
+            <div class="bg-panelbg border border-slate-700 rounded-xl p-6 md:p-10 mb-10 shadow-xl">
+                <h3 class="text-xl font-bold text-white mb-8 border-b border-slate-700 pb-4">1. расчет новой чистой прибыли</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div>
+                        <div class="mb-10">
+                            <label class="block text-gray-300 font-semibold mb-4">ваша текущая чистая прибыль (в месяц): <span id="current-profit-display" class="text-blue-400 font-bold text-lg ml-2">2 000 000 ₽</span></label>
+                            <input type="range" id="current-profit-input" min="100000" max="15000000" step="100000" value="2000000" class="calc-range">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 font-semibold mb-4">потенциал роста (за счет оцифровки): <span id="growth-display" class="text-blue-400 font-bold text-lg ml-2">15%</span></label>
+                            <input type="range" id="growth-input" min="5" max="50" step="1" value="15" class="calc-range">
+                            <p class="text-xs text-gray-500 mt-3 leading-relaxed">по статистике, в малом и среднем бизнесе мы находим от 10% до 30% скрытой прибыли за счет разморозки запасов и отсечения убыточных продуктов.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#101c32] rounded-xl border border-btnblue/30 p-8 flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-btnblue opacity-10 rounded-full blur-3xl"></div>
+                        
+                        <div class="mb-6 relative z-10">
+                            <div class="text-gray-500 text-sm mb-2 font-semibold">дополнительная прибыль:</div>
+                            <div id="additional-profit" class="text-3xl font-bold text-green-400">+ 300 000 ₽</div>
+                        </div>
+                        
+                        <div class="relative z-10 border-t border-slate-700 pt-6">
+                            <div class="text-gray-400 text-xs uppercase tracking-wider mb-2 font-bold">новая чистая прибыль:</div>
+                            <div id="new-net-profit" class="text-4xl md:text-5xl font-bold text-white">2 300 000 ₽</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- шаг 2: плашки тарифов -->
+            <h3 class="text-xl font-bold text-white mb-6 pl-2">2. расчет окупаемости работы (roi) по тарифам</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- тариф 1 -->
+                <div class="bg-panelbg border border-slate-700 p-8 rounded-xl relative hover:border-blue-400 transition-all shadow-lg">
+                    <h4 class="text-xl font-bold text-white mb-2">базовый</h4>
+                    <p class="text-sm text-gray-400 mb-6 border-b border-slate-700 pb-4 h-[60px]">учет и базовая отчетность. наведение порядка в цифрах.</p>
+                    
+                    <div class="mb-6">
+                        <div class="text-gray-500 text-xs uppercase mb-1">стоимость тарифа:</div>
+                        <div class="text-2xl font-bold text-white">от 80 000 ₽ <span class="text-sm font-normal text-gray-500">/ мес</span></div>
+                    </div>
+                    
+                    <div class="mb-6 bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <div class="text-gray-400 text-xs uppercase mb-1">чистая выгода:</div>
+                        <div id="benefit-1" class="text-xl font-bold text-green-400">+ 220 000 ₽</div>
+                    </div>
+
+                    <div>
+                        <div class="text-gray-500 text-xs uppercase mb-1">окупаемость (roi):</div>
+                        <div id="roi-1" class="text-3xl font-bold text-blue-400">275%</div>
+                    </div>
+                    
+                    <a href="https://t.me/SvetlanaRyabogina" target="_blank" rel="noopener noreferrer" class="btn-custom block w-full text-center py-3 rounded-lg mt-6 font-bold">Выбираю базовый</a>
+                </div>
+
+                <!-- тариф 2 -->
+                <div class="bg-panelbg border border-btnblue shadow-[0_0_25px_rgba(29,100,216,0.15)] p-8 rounded-xl relative transform md:-translate-y-2">
+                    <div class="absolute top-0 right-0 bg-btnblue text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-lg uppercase tracking-wider">популярный</div>
+                    <h4 class="text-xl font-bold text-white mb-2">оптимальный</h4>
+                    <p class="text-sm text-gray-400 mb-6 border-b border-slate-700 pb-4 h-[60px]">полный аутсорс финдиректора. платежный календарь и разборы.</p>
+                    
+                    <div class="mb-6">
+                        <div class="text-gray-500 text-xs uppercase mb-1">стоимость тарифа:</div>
+                        <div class="text-2xl font-bold text-white">от 150 000 ₽ <span class="text-sm font-normal text-gray-500">/ мес</span></div>
+                    </div>
+                    
+                    <div class="mb-6 bg-[#101c32] rounded-lg p-4 border border-btnblue/30">
+                        <div class="text-gray-400 text-xs uppercase mb-1">чистая выгода:</div>
+                        <div id="benefit-2" class="text-xl font-bold text-green-400">+ 150 000 ₽</div>
+                    </div>
+
+                    <div>
+                        <div class="text-gray-500 text-xs uppercase mb-1">окупаемость (roi):</div>
+                        <div id="roi-2" class="text-3xl font-bold text-blue-400">100%</div>
+                    </div>
+                    
+                    <a href="https://t.me/SvetlanaRyabogina" target="_blank" rel="noopener noreferrer" class="btn-custom block w-full text-center py-3 rounded-lg mt-6 font-bold">Выбираю оптимальный</a>
+                </div>
+
+                <!-- тариф 3 -->
+                <div class="bg-panelbg border border-slate-700 p-8 rounded-xl relative hover:border-blue-400 transition-all shadow-lg">
+                    <h4 class="text-xl font-bold text-white mb-2">стратегия</h4>
+                    <p class="text-sm text-gray-400 mb-6 border-b border-slate-700 pb-4 h-[60px]">для растущих компаний. финмоделирование и инвестиции.</p>
+                    
+                    <div class="mb-6">
+                        <div class="text-gray-500 text-xs uppercase mb-1">стоимость тарифа:</div>
+                        <div class="text-2xl font-bold text-white">от 250 000 ₽ <span class="text-sm font-normal text-gray-500">/ мес</span></div>
+                    </div>
+                    
+                    <div class="mb-6 bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <div class="text-gray-400 text-xs uppercase mb-1">чистая выгода:</div>
+                        <div id="benefit-3" class="text-xl font-bold text-green-400">+ 50 000 ₽</div>
+                    </div>
+
+                    <div>
+                        <div class="text-gray-500 text-xs uppercase mb-1">окупаемость (roi):</div>
+                        <div id="roi-3" class="text-3xl font-bold text-blue-400">20%</div>
+                    </div>
+                    
+                    <a href="https://t.me/SvetlanaRyabogina" target="_blank" rel="noopener noreferrer" class="btn-custom block w-full text-center py-3 rounded-lg mt-6 font-bold">Выбираю стратегия</a>
+                </div>
+
+            </div>
+            
+            <div id="roi-warning" class="mt-8 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center hidden">
+                при таких вводных внедрение старших тарифов пока не окупается. рекомендую начать с базовых консультаций.
+            </div>
+
+        </div>
+    </section>
+
+    <!-- блок 5: доказательства и кейсы -->
+    <section class="bg-bgdark py-20 px-4 border-b border-slate-800">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl text-center mb-4">Опыт в цифрах</h2>
+            <p class="text-gray-400 text-center mb-10 font-light">Выберите направление, чтобы посмотреть твердые результаты моей работы.</p>
+
+            <div class="flex flex-wrap justify-center gap-2 mb-8" id="case-tabs">
+                <button class="px-6 py-2 rounded-md text-sm font-semibold transition-colors bg-btnblue text-white" data-target="production">производство</button>
+                <button class="px-6 py-2 rounded-md text-sm font-semibold transition-colors bg-slate-800 text-gray-400 hover:text-white" data-target="trade">торговля</button>
+                <button class="px-6 py-2 rounded-md text-sm font-semibold transition-colors bg-slate-800 text-gray-400 hover:text-white" data-target="services">услуги и медицина</button>
+            </div>
+
+            <!-- контейнер кейса -->
+            <div class="bg-panelbg rounded-xl p-8 border border-slate-700 shadow-xl">
+                <h3 id="case-title" class="text-xl md:text-2xl font-bold text-white mb-8 border-b border-slate-700 pb-4">оптимизация процессов на производстве (оборот >500 млн руб)</h3>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="text-gray-500 text-sm mb-2 font-semibold">задача:</div>
+                        <p id="case-before" class="text-gray-300 text-sm mb-6 leading-relaxed">убыточные направления тянули компанию вниз, ценообразование не опиралось на реальную себестоимость, экономические процессы полностью отсутствовали.</p>
+                        
+                        <div class="text-blue-400 text-sm mb-2 font-semibold">решение:</div>
+                        <ul id="case-after" class="text-gray-300 text-sm space-y-2 list-disc pl-4 marker:text-slate-500">
+                            <li>построение экономических процессов с нуля.</li>
+                            <li>внедрение бдр и план-факт контроля.</li>
+                            <li>вывод убыточных направлений в плюс.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-[#101c32] rounded-lg p-6 flex flex-col justify-center border border-slate-700 relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-500 opacity-5 rounded-full blur-xl"></div>
+                        <div class="text-gray-500 text-sm mb-1">главный результат:</div>
+                        <div id="case-metric-1" class="text-2xl md:text-3xl font-bold text-white mb-4">+6-10% маржинальности</div>
+                        
+                        <div class="text-gray-500 text-sm mb-1">дополнительно:</div>
+                        <div id="case-metric-2" class="text-lg font-bold text-blue-300">рост цен на продукцию до +10%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- блок 6: сравнение -->
+    <section class="py-20 px-4 bg-gradient-to-b from-bgdark to-bgdarker border-b border-slate-800">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl text-center mb-16">Сравнение форматов работы</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- штатный -->
+                <div class="flex-1 bg-panelbg p-8 rounded-xl border border-slate-700 shadow-md">
+                    <h3 class="text-xl font-bold text-gray-300 mb-6 text-center border-b border-slate-700 pb-4">штатный финдир</h3>
+                    <ul class="space-y-4 text-gray-400 text-sm">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 font-bold">×</span> 
+                            <span>зарплата специалиста: от 200 000 руб.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 font-bold">×</span> 
+                            <span>налоги и взносы сверху: около 86 000 руб.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 font-bold">×</span> 
+                            <span>рабочее место, софт, отпуска: около 30 000 руб.</span>
+                        </li>
+                    </ul>
+                    <div class="mt-8 pt-6 border-t border-slate-700 text-center">
+                        <div class="text-gray-500 text-sm">итоговый расход:</div>
+                        <div class="text-2xl font-bold text-gray-300">около 316 000 руб / мес</div>
+                    </div>
+                </div>
+
+                <!-- аутсорс -->
+                <div class="flex-1 bg-[#101c32] p-8 rounded-xl shadow-[0_10px_30px_rgba(29,100,216,0.15)] border border-btnblue relative transform md:-translate-y-4">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-btnblue text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
+                        мой формат
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-6 text-center border-b border-slate-700 pb-4">аутсорс для малого бизнеса</h3>
+                    <ul class="space-y-4 text-gray-300 text-sm">
+                        <li class="flex items-start">
+                            <span class="text-blue-400 mr-3 font-bold">✓</span> 
+                            <span>опыт управления экономикой в гоз с оборотом более 1 млрд руб.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-400 mr-3 font-bold">✓</span> 
+                            <span>полное отсутствие налогов: оплата идет по договору оказания услуг.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-400 mr-3 font-bold">✓</span> 
+                            <span>разработка 25+ финансовых моделей для защиты от рискованных решений.</span>
+                        </li>
+                    </ul>
+                    <div class="mt-8 pt-6 border-t border-slate-700 text-center">
+                        <div class="text-gray-400 text-sm">оптимальная инвестиция:</div>
+                        <div class="text-3xl font-bold text-blue-400">индивидуально</div>
+                        <p class="text-xs text-gray-500 mt-2">зависит от текущего масштаба и задач бизнеса</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- блок 7: CTA -->
+    <section class="py-24 bg-bgdarker text-center px-4">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="font-serif text-white text-3xl md:text-4xl mb-6">Бесплатный разбор финансов</h2>
+            <p class="text-lg text-gray-400 mb-10 font-light">Запишитесь на 30-минутный онлайн-разбор. Никаких продаж в лоб. Обсуждаем только сухие цифры вашей компании.</p>
+            
+            <a href="#contact" class="btn-custom inline-flex items-center px-8 py-4 rounded-lg text-lg mb-6 shadow-[0_0_20px_rgba(29,100,216,0.3)]">
+                Выбрать время для встречи
+            </a>
+        </div>
+    </section>
+
+    <!-- логика -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. слайдер до/после
+            const sliderInput = document.getElementById('compare-range');
+            const panelAfter = document.getElementById('panel-after');
+            const sliderLine = document.getElementById('slider-line');
+            const wrapperBefore = document.getElementById('wrapper-before');
+            const wrapperAfter = document.getElementById('wrapper-after');
+
+            sliderInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                panelAfter.style.clipPath = `polygon(${val}% 0, 100% 0, 100% 100%, ${val}% 100%)`;
+                sliderLine.style.left = `${val}%`;
+                
+                // динамическое центрирование текста внутри видимых областей
+                wrapperBefore.style.width = `${val}%`;
+                wrapperAfter.style.left = `${val}%`;
+                wrapperAfter.style.width = `${100 - val}%`;
+            });
+
+            // 2. калькулятор потерь
+            const turnoverInput = document.getElementById('turnover-input');
+            const turnoverDisplay = document.getElementById('turnover-display');
+            const resultDisplay = document.getElementById('calc-result');
+            const radioInputs = document.querySelectorAll('.custom-radio');
+
+            function calculateLoss() {
+                const turnover = parseInt(turnoverInput.value, 10) * 1000000;
+                let gapFactor = 0;
+                let marginFactor = 0;
+
+                const selectedGap = document.querySelector('input[name="gaps"]:checked');
+                const selectedMargin = document.querySelector('input[name="margin"]:checked');
+
+                if (selectedGap) gapFactor = parseFloat(selectedGap.value);
+                if (selectedMargin) marginFactor = parseFloat(selectedMargin.value);
+
+                const totalLoss = turnover * (gapFactor + marginFactor);
+                resultDisplay.textContent = new Intl.NumberFormat('ru-RU').format(totalLoss) + ' ₽';
+            }
+
+            turnoverInput.addEventListener('input', (e) => {
+                turnoverDisplay.textContent = `${e.target.value} млн руб`;
+                calculateLoss();
+            });
+
+            radioInputs.forEach(radio => radio.addEventListener('change', calculateLoss));
+            calculateLoss(); // старт
+
+            // 3. логика калькулятора окупаемости (ROI)
+            const currentProfitInput = document.getElementById('current-profit-input');
+            const growthInput = document.getElementById('growth-input');
+            const currentProfitDisplay = document.getElementById('current-profit-display');
+            const growthDisplay = document.getElementById('growth-display');
+            const additionalProfitDisplay = document.getElementById('additional-profit');
+            const newNetProfitDisplay = document.getElementById('new-net-profit');
+            
+            const tariffs = [80000, 150000, 250000]; // цены 3-х тарифов
+            
+            function calculateROI() {
+                const currentProfit = parseInt(currentProfitInput.value, 10);
+                const growth = parseInt(growthInput.value, 10);
+                
+                currentProfitDisplay.textContent = new Intl.NumberFormat('ru-RU').format(currentProfit) + ' ₽';
+                growthDisplay.textContent = growth + '%';
+
+                const additionalProfit = Math.round(currentProfit * (growth / 100));
+                const newProfit = currentProfit + additionalProfit;
+
+                additionalProfitDisplay.textContent = '+ ' + new Intl.NumberFormat('ru-RU').format(additionalProfit) + ' ₽';
+                newNetProfitDisplay.textContent = new Intl.NumberFormat('ru-RU').format(newProfit) + ' ₽';
+
+                let hasNegative = false;
+
+                tariffs.forEach((cost, index) => {
+                    const benefit = additionalProfit - cost;
+                    // формула ROI: (прибыль от вложений - затраты) / затраты * 100
+                    const roi = Math.round((benefit / cost) * 100);
+
+                    const benefitEl = document.getElementById(`benefit-${index+1}`);
+                    const roiEl = document.getElementById(`roi-${index+1}`);
+
+                    if (benefit > 0) {
+                        benefitEl.textContent = '+ ' + new Intl.NumberFormat('ru-RU').format(benefit) + ' ₽';
+                        benefitEl.className = 'text-xl font-bold text-green-400';
+                    } else {
+                        benefitEl.textContent = new Intl.NumberFormat('ru-RU').format(benefit) + ' ₽';
+                        benefitEl.className = 'text-xl font-bold text-red-400';
+                    }
+
+                    roiEl.textContent = roi + '%';
+                    if (roi < 0) hasNegative = true;
+                    roiEl.className = roi >= 0 ? 'text-3xl font-bold text-blue-400' : 'text-3xl font-bold text-red-400';
+                });
+
+                const warningEl = document.getElementById('roi-warning');
+                if (warningEl) {
+                    warningEl.style.display = hasNegative ? 'block' : 'none';
+                }
+            }
+
+            if (currentProfitInput && growthInput) {
+                currentProfitInput.addEventListener('input', calculateROI);
+                growthInput.addEventListener('input', calculateROI);
+                calculateROI(); // инициализация при загрузке
+            }
+
+            // 4. логика табов с кейсами
+            const casesData = {
+                production: {
+                    title: "оптимизация процессов на производстве (оборот >500 млн руб)",
+                    before: "убыточные направления тянули компанию вниз, ценообразование не опиралось на реальную себестоимость, экономические процессы полностью отсутствовали.",
+                    after: ["построение экономических процессов с нуля.", "внедрение бдр и план-факт контроля.", "вывод убыточных направлений в плюс."],
+                    metric1: "+6-10% маржинальности",
+                    metric2: "рост цен на продукцию до +10%"
+                },
+                trade: {
+                    title: "построение учета в торговой компании (оборот 10-50 млн руб)",
+                    before: "бизнес вырос, но деньги перестали сходиться. постоянные кассовые разрывы, собственник управлял на интуиции.",
+                    after: ["построен управленческий учет с нуля (ддс, опиу, баланс).", "внедрен платежный календарь.", "снижены неконтролируемые расходы в 5 раз."],
+                    metric1: "0 кассовых разрывов",
+                    metric2: "полная прозрачность прибыли"
+                },
+                services: {
+                    title: "ускорение отчетности в сфере услуг и медицины",
+                    before: "управленческая отчетность собиралась по 15-20 дней. собственник принимал решения постфактум, опираясь на устаревшие данные.",
+                    after: ["настроена автоматизация учета.", "разработаны операционные отчеты.", "расчет маржинальности по каждой услуге."],
+                    metric1: "отчетность за 3-5 дней",
+                    metric2: "сокращение трудозатрат на 20%"
+                }
+            };
+
+            const tabs = document.querySelectorAll('#case-tabs button');
+            const cTitle = document.getElementById('case-title');
+            const cBefore = document.getElementById('case-before');
+            const cAfter = document.getElementById('case-after');
+            const cMetric1 = document.getElementById('case-metric-1');
+            const cMetric2 = document.getElementById('case-metric-2');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // смена стилей активного таба
+                    tabs.forEach(t => {
+                        t.classList.remove('bg-btnblue', 'text-white');
+                        t.classList.add('bg-slate-800', 'text-gray-400');
+                    });
+                    tab.classList.add('bg-btnblue', 'text-white');
+                    tab.classList.remove('bg-slate-800', 'text-gray-400');
+
+                    // обновление контента
+                    const target = tab.getAttribute('data-target');
+                    const data = casesData[target];
+
+                    cTitle.textContent = data.title;
+                    cBefore.textContent = data.before;
+                    
+                    // безопасно обновляем список
+                    cAfter.innerHTML = '';
+                    data.after.forEach(itemText => {
+                        const li = document.createElement('li');
+                        li.textContent = itemText;
+                        cAfter.appendChild(li);
+                    });
+
+                    cMetric1.textContent = data.metric1;
+                    cMetric2.textContent = data.metric2;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
